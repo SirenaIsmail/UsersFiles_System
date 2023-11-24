@@ -26,7 +26,7 @@ class Group extends Model
 
     public function groupfiles()
     {
-        return $this->hasMany(GroupFile::class, 'group_id', 'id');
+        return $this->hasMany(File::class, 'group_id', 'id');
     }
 
 }

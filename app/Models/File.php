@@ -13,6 +13,7 @@ class File extends Model
         'path',
         'status',
         'user_id',
+        'group_id'
     ];
 
     public function users()
@@ -21,9 +22,9 @@ class File extends Model
     }
 
 
-    public function groupfiles()
+    public function group()
     {
-        return $this->hasMany(GroupFile::class, 'file_id', 'id');
+        return $this->belongsTo(Group::class, 'group_id', 'id');
     }
 
 

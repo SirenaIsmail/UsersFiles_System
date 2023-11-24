@@ -10,7 +10,7 @@ class UserGroup extends Model
     use HasFactory;
     protected $fillable=[
         'group_id',
-        'file_id'
+        'user_id'
     ];
 
     public function groups()
