@@ -25,5 +25,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('add-group', [GroupController::class, 'store']);
     Route::post('add-members', [GroupController::class, 'addMembers']);
     Route::post('upload', [FileController::class, 'upload']);
+    Route::get('download', [FileController::class, 'download']);
+    Route::get('create-file', [FileController::class, 'create']);
+    Route::post('remove-file', [FileController::class, 'removeFile']);
+    Route::get('group-files', [FileController::class, 'index']);
+    Route::get('search/{filter}', [FileController::class, 'search']);
+    Route::post('bulk-checkin', [FileController::class, 'bulkCheckIn']);
+    Route::post('checkout', [FileController::class, 'checkOut']);
+
+
 
 });
