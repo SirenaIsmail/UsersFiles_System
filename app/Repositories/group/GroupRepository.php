@@ -3,6 +3,7 @@
 namespace App\Repositories\group;
 
 
+use App\Models\File;
 use App\Models\Group;
 use App\Models\User;
 use App\Models\UserGroup;
@@ -32,6 +33,23 @@ class GroupRepository implements IGroupRepository
         return $groups;
     }
 
+    public function my_groups()
+    {
+        $user = auth()->user();
+        $groups = Group::with('usergroups')->where('user_id',$user->id)->get();
+        return $groups;
+    }
+
+    public function membership_groups()
+    {
+        $user = auth()->user();
+        $groups = Group::join('user_groups', 'groups.id', '=', 'user_groups.group_id')
+            ->where('user_groups.user_id',$user->id)
+//            ->select('doctors.id', 'users.id', 'doctors.name_ar', 'specialization_ar','sex')
+            ->orderBy('user_groups.id')->get();
+        return $groups;
+    }
+
     public function store(Request $request)
     {
         $user = auth()->user();
@@ -41,6 +59,16 @@ class GroupRepository implements IGroupRepository
             'user_id' => $user->id,
         ]);
     }
+
+    public function update(Request $request)
+    {
+        $user = auth()->user();
+        $group = Group::find($request->group);
+        $group->update([
+            'name' => $request->name,
+        ]);
+    }
+
 
     public function addMembers(Request $request)
     {
@@ -55,10 +83,39 @@ class GroupRepository implements IGroupRepository
         }
     }
 
+    public function removeMember(Request $request){
+        $user = auth()->user();
+        $member = UserGroup::where('group_id',$request->group)->where('user_id',$request->user)->first();
+        $member->delete();
+    }
+
     public function user_group()
     {
         $user = auth()->user();
         $groups = Group::where('user_id',$user->id)->get();
         return $groups;
     }
+
+    public function groupUsers(Request $request){
+        $group = Group::find($request->group);
+        $users = User::join('user_groups', 'users.id', '=', 'user_groups.user_id')
+            ->where('user_groups.group_id',$group->id)
+            ->orderBy('users.id')->get();
+        return $users;
+    }
+
+    public function deleteGroup($request){
+        $group = Group::find($request->group);
+        $members = UserGroup::where('group_id',$group->id)->get();
+        $files = File::where('group_id',$group->id)->get();
+        foreach ($members as $member){
+            $member->delete();
+        }
+        foreach ($files as $file){
+            $file->delete();
+        }
+        $group->delete();
+    }
+
+
 }

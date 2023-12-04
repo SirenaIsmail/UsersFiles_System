@@ -21,11 +21,19 @@ use Illuminate\Support\Facades\Route;
 Route::post('login', [UserController::class, 'login']);
 
 Route::middleware('auth:api')->group(function () {
+    ######################## Groups Apis ################################################
     Route::get('groups', [GroupController::class, 'index']);
+    Route::get('my-groups', [GroupController::class, 'myGroups']);
+    Route::get('membership-groups', [GroupController::class, 'membershipGroups']);
     Route::post('add-group', [GroupController::class, 'store']);
+    Route::post('update-group', [GroupController::class, 'update']);
     Route::post('add-members', [GroupController::class, 'addMembers']);
+    Route::post('remove-member', [GroupController::class, 'removeMember']);
+    Route::post('group-users', [GroupController::class, 'groupUsers']);
+    Route::post('delete-group', [GroupController::class, 'deleteGroup']);
+    ######################################################################################
     Route::post('upload', [FileController::class, 'upload']);
-    Route::get('download', [FileController::class, 'download']);
+    Route::post('download', [FileController::class, 'download']);
     Route::get('create-file', [FileController::class, 'create']);
     Route::post('remove-file', [FileController::class, 'removeFile']);
     Route::get('group-files', [FileController::class, 'index']);

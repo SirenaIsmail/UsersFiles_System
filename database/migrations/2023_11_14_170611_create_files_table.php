@@ -18,14 +18,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('path');
             $table->integer('status')->default(0);
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
-            $table->foreignId('group_id')
-                ->constrained('groups')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('group_id')->nullable();
             $table->timestamps();
         });
     }

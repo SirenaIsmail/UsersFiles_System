@@ -24,7 +24,8 @@ class FileController extends Controller
     }
 
 
-    public function upload(Request $request): JsonResponse{
+    public function upload(Request $request): JsonResponse
+    {
         $user = auth()->user();
         $validator = Validator::make($request->all(), [
             'group' => 'required',
@@ -35,14 +36,14 @@ class FileController extends Controller
         }
         $file = $request->file('file');
         $fileName = $file->getClientOriginalName();
-        $file->move(public_path('Files'),$fileName);
+        $file->move(public_path('Files'), $fileName);
         File::create([
-            'name' =>$fileName,
-            'path' =>public_path('Files'),
-            'user_id' =>$user->id,
-            'group_id' =>$request->group
+            'name' => $fileName,
+            'path' => public_path('Files'),
+            'user_id' => $user->id,
+            'group_id' => $request->group
         ]);
-        return $this->returnSuccess("D00","file uploaded successfully..");
+        return $this->returnSuccess("D00", "file uploaded successfully..");
     }
 
 
