@@ -32,5 +32,10 @@ class File extends Model
         return $this->belongsTo(User::class,'forID','id');
     }
 
+    public function history()
+    {
+        return $this->hasMany(FileHistory::class, 'file_id', 'id');
+    }
+
 
 }

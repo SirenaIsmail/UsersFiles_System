@@ -65,6 +65,12 @@ class User extends Authenticatable
         return $this->hasMany(File::class, 'forID', 'id');
     }
 
+    public function history()
+    {
+        return $this->hasMany(FileHistory::class, 'user_id', 'id');
+    }
+
+
     public function run()
     {
         User::factory()
