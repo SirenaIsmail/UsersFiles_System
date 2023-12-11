@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\File;
 use App\Repositories\file\IFileRepository;
 use App\Repositories\group\IGroupRepository;
+use App\Traits\FileCheckTrait;
 use App\Traits\ResponseTrait;
 
 use Illuminate\Http\JsonResponse;
@@ -12,10 +13,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Support\Facades\Response;
 
 class FileController extends Controller
 {
     use ResponseTrait;
+    use FileCheckTrait;
     public $group;
 
     public function __construct(IFileRepository $fileRepository)
@@ -47,34 +50,32 @@ class FileController extends Controller
     }
 
 
-
-
     public function download(Request $request){
-
+        $user=auth()->user();
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
+            'id' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());
         }
-
-        $path = public_path('Files/' . $request->name);
-
-        if (!file_exists($path)) {
-            abort(404, 'File not found');
+        $file = File::find($request->id);
+        if ($user->id!=$file->forID){
+            return $this->returnError("P01","You do not have permission");
         }
 
-        $response = new BinaryFileResponse($path);
-        $response->setContentDisposition(
-            'attachment',
-            $request->name,
-            iconv('UTF-8', 'ASCII//TRANSLIT', $request->name)
-        );
+        $path = public_path('Files/' . $file->name);
 
-        return $response;
+        if (!file_exists($path)) {
+            return $this->returnError("F01","File not found");
+//            abort(404, 'File not found');
+        }else{
+            return response()->download($path);
+
+        }
+//        return $this->returnData("path",$path);
+//        return Response::download($path,$request->name,['Content-Type: application/txt'],"inline");
+
     }
-
-
 
 
     public function removeFile(Request $request):JsonResponse{
@@ -94,12 +95,11 @@ class FileController extends Controller
     }
 
 
-
-
     public function index(): JsonResponse{
         $files = $this->FileRepository->index();
         return $this->returnData('files',$files,"","");
     }
+
 
     public function search($filter): JsonResponse{
         $filterResult = $this->FileRepository->search($filter);
@@ -107,21 +107,23 @@ class FileController extends Controller
     }
 
 
-
     public function bulkCheckIn(Request $request){
-
+        $user = auth()->user();
         $ids = $request->input('ids', []);
         if (!is_array($ids)) {
             $ids = explode(',', $ids);
         }
-        $lockedFiles = File::whereIn('id', $ids)->where('status', 1)->get();
-
-        if ($lockedFiles->isNotEmpty()) {
+        if (!$this->check($ids)) {
             return response()->json([
                 "message" => "one or more files are locked.",
             ]);
         }
-        File::whereIn('id', $ids)->update(['status' => 1]);
+            DB::table('files')->whereIn('id',$ids)->lockForUpdate()
+                ->update(['status' => 1,'forID' => $user->id]);
+            DB::commit();
+
+        File::whereIn('id', $ids)->update(['status' => 1,'forID' => $user->id]);
+
 
         return response()->json([
             "message" => "You checked in one or more files successfully.",
@@ -131,9 +133,14 @@ class FileController extends Controller
 
 
     public function checkOut(Request $request){
+        $user= auth()->user();
         $file = File::find($request->id);
+        if ($user->id!=$file->forID){
+            return $this->returnError("P01","you do not have permission");
+        }
         if ($file->status == 1) {
             $file->status = 0;
+            $file->forID = null;
             $file->save();
             return response()->json([
                 "message" => "you checked out successfully.",

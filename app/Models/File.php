@@ -13,6 +13,7 @@ class File extends Model
         'path',
         'status',
         'user_id',
+        'forID',
         'group_id'
     ];
 
@@ -25,6 +26,10 @@ class File extends Model
     public function group()
     {
         return $this->belongsTo(Group::class, 'group_id', 'id');
+    }
+
+    public function appoFor(){
+        return $this->belongsTo(User::class,'forID','id');
     }
 
 

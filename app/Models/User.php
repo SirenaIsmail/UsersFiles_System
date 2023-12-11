@@ -60,6 +60,10 @@ class User extends Authenticatable
         return $this->hasMany(UserGroup::class, 'user_id', 'id');
     }
 
+    public function userAppoFile()
+    {
+        return $this->hasMany(File::class, 'forID', 'id');
+    }
 
     public function run()
     {
