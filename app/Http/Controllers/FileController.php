@@ -106,7 +106,6 @@ class FileController extends Controller
         return $this->returnData('files',$filterResult,"","");
     }
 
-
     public function bulkCheckIn(Request $request){
         $user = auth()->user();
         $ids = $request->input('ids', []);
@@ -121,9 +120,6 @@ class FileController extends Controller
             DB::table('files')->whereIn('id',$ids)->lockForUpdate()
                 ->update(['status' => 1,'forID' => $user->id]);
             DB::commit();
-
-        File::whereIn('id', $ids)->update(['status' => 1,'forID' => $user->id]);
-
 
         return response()->json([
             "message" => "You checked in one or more files successfully.",

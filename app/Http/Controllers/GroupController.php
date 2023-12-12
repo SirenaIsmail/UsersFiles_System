@@ -49,6 +49,10 @@ class GroupController extends Controller
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());
         }
+        $group = Group::find($request->group);
+        if (!$group){
+            return $this->returnError("D01","group not found");
+        }
         $users = $this->GroupRepository->groupUsers($request);
         return $this->returnData("users",$users,"","");
     }
@@ -94,6 +98,7 @@ class GroupController extends Controller
         return $this->returnSuccess("D00", "Members Added successfully..");
     }
 
+
     public function removeMember(Request $request): JsonResponse{
         $user = auth()->user();
         $validator = Validator::make($request->all(), [
@@ -107,9 +112,16 @@ class GroupController extends Controller
         if ($group->user_id != $user->id){
             return $this->returnError("P01","You do not have permission");
         }
-        $this->GroupRepository->removeMember($request);
-        return $this->returnSuccess("D00", "Member Removed successfully..");
+        $member = UserGroup::where('group_id',$request->group)->where('user_id',$request->user)->first();
+        if (!$member){
+            return $this->returnError("D01","user not found");
+        }else{
+            $this->GroupRepository->removeMember($request);
+            return $this->returnSuccess("D00", "Member Removed successfully..");
+        }
+
     }
+
 
     public function deleteGroup(Request $request): JsonResponse{
         $user = auth()->user();

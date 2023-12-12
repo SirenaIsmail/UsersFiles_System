@@ -31,10 +31,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('remove-member', [GroupController::class, 'removeMember']);
     Route::post('group-users', [GroupController::class, 'groupUsers']);
     Route::post('delete-group', [GroupController::class, 'deleteGroup']);
+    Route::get('logout', [UserController::class, 'logout']);
+
     ######################################################################################
     Route::post('upload', [FileController::class, 'upload']);
     Route::post('download', [FileController::class, 'download']);
-    Route::get('create-file', [FileController::class, 'create']);
     Route::post('remove-file', [FileController::class, 'removeFile']);
     Route::get('group-files', [FileController::class, 'index']);
     Route::get('search/{filter}', [FileController::class, 'search']);
