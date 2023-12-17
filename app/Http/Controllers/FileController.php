@@ -59,8 +59,11 @@ class FileController extends Controller
             return $this->returnError("V00", $validator->errors());
         }
         $file = File::find($request->id);
+        if (!$file){
+            return $this->returnError("D01","file not found..");
+        }
         if ($user->id!=$file->forID){
-            return $this->returnError("P01","You do not have permission");
+            return $this->returnError("P01","You need to checkin this file firstly..");
         }
 
         $path = public_path('Files/' . $file->name);
