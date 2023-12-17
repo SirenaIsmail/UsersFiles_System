@@ -20,6 +20,8 @@ return new class extends Migration
             $table->integer('status')->default(0);
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('group_id')->nullable();
+            $table->unsignedBigInteger('forID')->nullable();
+
             $table->timestamps();
         });
     }
