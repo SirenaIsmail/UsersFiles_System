@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Aspects\Addmembers;
+use App\Aspects\Transaction;
 use App\Models\Group;
 use App\Models\User;
 use App\Models\UserGroup;
@@ -43,15 +44,16 @@ class GroupController extends Controller
     }
 
     public function groupUsers(Request $request): JsonResponse{
+        $user = auth()->user();
         $validator = Validator::make($request->all(), [
-            'group' => 'required',
+            'group' => 'required|exists:groups,id',
         ]);
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());
         }
         $group = Group::find($request->group);
-        if (!$group){
-            return $this->returnError("D01","group not found");
+        if ($group->user_id!=$user->id){
+            return $this->returnError("P01","You Do Not Have Permission..");
         }
         $users = $this->GroupRepository->groupUsers($request);
         return $this->returnData("users",$users,"","");
@@ -73,7 +75,7 @@ class GroupController extends Controller
     public function update(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'group' => 'required',
+            'group' => 'required|exists:groups,id',
             'name' => 'required',
         ]);
         if ($validator->fails()) {
@@ -84,26 +86,31 @@ class GroupController extends Controller
         return $this->returnSuccess("D00", "Group updated successfully..");
     }
 
-
+    #[Transaction]
     public function addMembers(Request $request): JsonResponse
     {
+        $user = auth()->user();
         $validator = Validator::make($request->all(), [
-            'group' => 'required',
+            'group' => 'required|exists:groups,id',
             'users' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());
         }
+        $group = Group::find($request->group);
+        if ($group->user_id!=$user->id){
+            return $this->returnError("P01","You Do Not Have Permission..");
+        }
         $this->GroupRepository->addMembers($request);
         return $this->returnSuccess("D00", "Members Added successfully..");
     }
 
-
+    #[Transaction]
     public function removeMember(Request $request): JsonResponse{
         $user = auth()->user();
         $validator = Validator::make($request->all(), [
-            'group' => 'required',
-            'user' => 'required',
+            'group' => 'required|exists:groups,id',
+            'user' => 'required|exists:users,id',
         ]);
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());
@@ -114,7 +121,7 @@ class GroupController extends Controller
         }
         $member = UserGroup::where('group_id',$request->group)->where('user_id',$request->user)->first();
         if (!$member){
-            return $this->returnError("D01","user not found");
+            return $this->returnError("D01","Member not found");
         }else{
             $this->GroupRepository->removeMember($request);
             return $this->returnSuccess("D00", "Member Removed successfully..");
@@ -122,11 +129,11 @@ class GroupController extends Controller
 
     }
 
-
+    #[Transaction]
     public function deleteGroup(Request $request): JsonResponse{
         $user = auth()->user();
         $validator = Validator::make($request->all(), [
-            'group' => 'required',
+            'group' => 'required|exists:groups,id',
         ]);
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());

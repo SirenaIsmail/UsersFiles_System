@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Aspects\Addmembers;
+use App\Models\User;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,11 +47,18 @@ class UserController extends Controller
         }
     }
 
+
     public function logout():JsonResponse{
         $user = Auth::user()->token();
         $user->revoke();
         return $this->returnSuccess("","logout successfully");
 
 
+    }
+
+
+    public function users(): JsonResponse{
+        $users = User::select('id','name')->get();
+        return $this->returnData("users",$users);
     }
 }

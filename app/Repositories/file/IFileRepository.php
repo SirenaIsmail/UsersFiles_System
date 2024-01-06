@@ -11,5 +11,6 @@ interface IFileRepository
     public function user_his(Request $request);
     public function removeFile(Request $request);
     public function index();
+    public function my_checked();
     public function search($filter);
 }

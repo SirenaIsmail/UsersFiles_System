@@ -42,19 +42,16 @@ class FileRepository implements IFileRepository
 
         $fileId = $request->id;
         $file = File::find($fileId);
-
-        if (!$file) {
-            return $this->returnError("V02", "File not found.");
-        }
-
         //عم بحذف الفايل من الخادم عندي
         if (file_exists($file->path.'/'.$file->name)) {
             unlink($file->path.'/'.$file->name);
         }
+        $hists = FileHistory::where('file_id',$fileId)->get();
+        foreach ($hists as $hist){
+            $hist->delete();
+        }
         $file->delete();
     }
-
-
 
 
     public function index(){
@@ -76,6 +73,12 @@ class FileRepository implements IFileRepository
     }
 
 
+    public function my_checked(){
+        $user = auth()->user();
+        $files = File::where('forID',$user->id)->get();
+        return $files;
+    }
+
 
     public function search($filter){
         if($filter != "null"){
@@ -88,12 +91,14 @@ class FileRepository implements IFileRepository
         }
     }
 
+
     public function file_his(Request $request)
     {
         $file_his = FileHistory::where('file_id',$request->id)
             ->orderByDesc('id')->get();
         return $file_his;
     }
+
 
     public function user_his(Request $request)
     {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Aspects\Logger;
+use App\Aspects\Transaction;
 use App\Models\File;
 use App\Models\Group;
 use App\Models\User;
@@ -16,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Facades\Response;
 
@@ -32,11 +34,12 @@ class FileController extends Controller
     }
 
     #[Logger]
+    #[Transaction]
     public function upload(Request $request): JsonResponse
     {
         $user = auth()->user();
         $validator = Validator::make($request->all(), [
-            'group' => 'required',
+            'group' => ['required',Rule::exists('groups','id')->where('user_id',$user->id)],
             'file' => 'required',
         ]);
         if ($validator->fails()) {
@@ -58,20 +61,18 @@ class FileController extends Controller
     }
 
     #[Logger]
+    #[Transaction]
     public function update(Request $request): JsonResponse
     {
         $user = auth()->user();
         $validator = Validator::make($request->all(), [
-            'id' => 'required',
+            'id' => 'required|exists:files,id',
             'file' => 'required',
         ]);
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());
         }
         $oldfile = File::find($request->id);
-        if (!$oldfile){
-            return $this->returnError("D01","Sorry ! The File Is Not Exist.. ");
-        }
         if ($oldfile->forID!=$user->id){
             return $this->returnError("P01","You Do Not Have Permission..");
         }
@@ -91,15 +92,12 @@ class FileController extends Controller
     public function download(Request $request){
         $user=auth()->user();
         $validator = Validator::make($request->all(), [
-            'id' => 'required',
+            'id' => 'required|exists:files,id',
         ]);
         if ($validator->fails()) {
             return $this->returnError("V00", $validator->errors());
         }
         $file = File::find($request->id);
-        if (!$file){
-            return $this->returnError("D01","file not found..");
-        }
         if ($user->id!=$file->forID){
             return $this->returnError("P01","You need to checkin this file firstly..");
         }
@@ -108,36 +106,39 @@ class FileController extends Controller
 
         if (!file_exists($path)) {
             return $this->returnError("F01","File not found");
-//            abort(404, 'File not found');
         }else{
             return response()->download($path);
 
         }
-//        return $this->returnData("path",$path);
-//        return Response::download($path,$request->name,['Content-Type: application/txt'],"inline");
-
     }
 
-
+    #[Transaction]
     public function removeFile(Request $request):JsonResponse{
 
         $user = auth()->user();
         $validator = Validator::make($request->all(), [
-            'id' => 'required|exists:files,id,user_id,' . $user->id,
+            'id' => 'required|exists:files,id'
         ]);
-
         if ($validator->fails()) {
             return $this->returnError("V01", $validator->errors());
         }
-
+        $file = File::find($request->id);
+        $group = Group::find($file->group_id);
+        if ($group->user_id != $user->id){
+            return $this->returnError("P01","You Do Not Have Permission..");
+        }
         $this->FileRepository->removeFile($request);
-
         return $this->returnSuccess("D01", "File deleted successfully.");
     }
 
 
     public function index(): JsonResponse{
         $files = $this->FileRepository->index();
+        return $this->returnData('files',$files,"","");
+    }
+
+    public function myCheckedFiles(): JsonResponse{
+        $files = $this->FileRepository->my_checked();
         return $this->returnData('files',$files,"","");
     }
 
@@ -172,10 +173,14 @@ class FileController extends Controller
     #[Logger]
     public function checkOut(Request $request){
         $user= auth()->user();
-        $file = File::find($request->id);
-        if (!$file){
-            return $this->returnError("P01","file not found..");
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:files,id'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError("V01", $validator->errors());
         }
+        $file = File::find($request->id);
         if ($user->id!=$file->forID){
             return $this->returnError("P01","you do not have permission");
         }
@@ -203,10 +208,11 @@ class FileController extends Controller
             return $this->returnError("V01", $validator->errors());
         }
         $file = File::find($request->id);
-        $grope = Group::find($file->group_id);
-        if ($grope->user_id!=$user->id){
+        $group = Group::find($file->group_id);
+        if ($group->user_id != $user->id){
             return $this->returnError("P01","You Do Not Have Permission..");
         }
+
         $his = $this->FileRepository->file_his($request);
         return $this->returnData('history',$his,'',"D00");
     }
