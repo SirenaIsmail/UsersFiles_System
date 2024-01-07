@@ -39,7 +39,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('update', [FileController::class, 'update']);
     Route::post('download', [FileController::class, 'download']);
     Route::post('remove-file', [FileController::class, 'removeFile']);
-    Route::get('group-files', [FileController::class, 'index']);
+    Route::post('group-files', [FileController::class, 'index']);
     Route::get('user-checked-files', [FileController::class, 'myCheckedFiles']);
     Route::get('search/{filter}', [FileController::class, 'search']);
     Route::post('bulk-checkin', [FileController::class, 'bulkCheckIn']);

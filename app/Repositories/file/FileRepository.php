@@ -54,28 +54,29 @@ class FileRepository implements IFileRepository
     }
 
 
-    public function index(){
+    public function index($request){
         $user = auth()->user();
-        if($user->role==1){
-            $files = DB::table('files')
-                ->join('groups', 'files.group_id', '=', 'groups.id')
-                ->select('files.name','files.status')
-                ->get();
-            return $files;
-        }
-        $files = DB::table('files')
-            ->join('groups', 'files.group_id', '=', 'groups.id')
-            ->join('user_groups','user_groups.group_id','=','groups.id')
-            ->select('files.name','files.status')
-            ->where('user_groups.user_id','=',$user->id)
-            ->get();
+//        if($user->role==1){
+//            $files = DB::table('files')
+//                ->join('groups', 'files.group_id', '=', 'groups.id')
+//                ->select('files.id','files.name','files.status')
+//                ->get();
+//            return $files;
+//        }
+//        $files = DB::table('files')
+//            ->join('groups', 'files.group_id', '=', 'groups.id')
+//            ->join('user_groups','user_groups.group_id','=','groups.id')
+//            ->select('files.name','files.status')
+//            ->where('user_groups.user_id','=',$user->id)
+//            ->get();
+        $files = File::where('group_id',$request->id)->get();
         return $files;
     }
 
 
     public function my_checked(){
         $user = auth()->user();
-        $files = File::where('forID',$user->id)->get();
+        $files = File::with('group')->where('forID',$user->id)->get();
         return $files;
     }
 

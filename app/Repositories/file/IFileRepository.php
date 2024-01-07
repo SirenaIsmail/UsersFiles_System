@@ -10,7 +10,7 @@ interface IFileRepository
     public function file_his(Request $request);
     public function user_his(Request $request);
     public function removeFile(Request $request);
-    public function index();
+    public function index(Request $request);
     public function my_checked();
     public function search($filter);
 }

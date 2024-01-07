@@ -28,7 +28,7 @@ class UserController extends Controller
                 'success' => false,
                 'error' => "V01",
                 'msg' => $validator->errors()
-            ]);
+            ],status: 404);
         }
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();
@@ -43,7 +43,7 @@ class UserController extends Controller
                 'success' => false,
                 'error' => "A01",
                 'msg' => 'Email or Password not correct'
-            ]);
+            ],status: 404);
         }
     }
 

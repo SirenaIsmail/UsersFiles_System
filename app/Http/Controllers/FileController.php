@@ -102,12 +102,15 @@ class FileController extends Controller
             return $this->returnError("P01","You need to checkin this file firstly..");
         }
 
-        $path = public_path('Files/' . $file->name);
+        $path = 'Files/' . $file->name;
 
         if (!file_exists($path)) {
             return $this->returnError("F01","File not found");
         }else{
-            return response()->download($path);
+            return response([
+                'path' => $path,
+                'name' => $file->name,
+            ]);
 
         }
     }
@@ -132,8 +135,14 @@ class FileController extends Controller
     }
 
 
-    public function index(): JsonResponse{
-        $files = $this->FileRepository->index();
+    public function index(Request $request): JsonResponse{
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:groups,id'
+        ]);
+        if ($validator->fails()) {
+            return $this->returnError("V01", $validator->errors());
+        }
+        $files = $this->FileRepository->index($request);
         return $this->returnData('files',$files,"","");
     }
 
@@ -149,6 +158,7 @@ class FileController extends Controller
     }
 
     #[Logger]
+    #[Transaction]
     public function bulkCheckIn(Request $request){
         $user = auth()->user();
         $ids = $request->input('ids', []);
@@ -157,7 +167,7 @@ class FileController extends Controller
         }
         if (!$this->check($ids)) {
             return response()->json([
-                "message" => "one or more files are locked.",
+                "msg" => "one or more files are locked.",
             ],status: 404);
         }
             DB::table('files')->whereIn('id',$ids)->lockForUpdate()
@@ -165,7 +175,7 @@ class FileController extends Controller
             DB::commit();
 
         return response()->json([
-            "message" => "You checked in one or more files successfully.",
+            "msg" => "You checked in one or more files successfully.",
         ]);
 
     }

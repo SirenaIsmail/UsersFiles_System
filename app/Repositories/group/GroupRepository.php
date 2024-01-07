@@ -43,9 +43,9 @@ class GroupRepository implements IGroupRepository
     public function membership_groups()
     {
         $user = auth()->user();
-        $groups = Group::join('user_groups', 'groups.id', '=', 'user_groups.group_id')
+        $groups = Group::with('groupfiles')->join('user_groups', 'groups.id', '=', 'user_groups.group_id')
             ->where('user_groups.user_id',$user->id)
-//            ->select('doctors.id', 'users.id', 'doctors.name_ar', 'specialization_ar','sex')
+           ->select('groups.id', 'groups.name')
             ->orderBy('user_groups.id')->get();
         return $groups;
     }
