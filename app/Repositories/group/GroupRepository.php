@@ -76,10 +76,13 @@ class GroupRepository implements IGroupRepository
         $members = $request->users;
         foreach ($members as $member){
             $usr = User::find($member);
-            UserGroup::create([
-                'group_id' => $request->group,
-                'user_id' =>$usr->id,
-            ]);
+            $check = UserGroup::where('group_id',$request->group)->where('user_id',$usr->id)->get();
+            if ($check->count()==0){
+                UserGroup::create([
+                    'group_id' => $request->group,
+                    'user_id' =>$usr->id,
+                ]);
+            }
         }
     }
 
