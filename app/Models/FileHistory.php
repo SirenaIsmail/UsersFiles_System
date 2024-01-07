@@ -14,6 +14,7 @@ class FileHistory extends Model
 
     protected $fillable=[
         'file_name',
+        'user_name',
         'action',
         'file_id',
         'user_id',

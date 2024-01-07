@@ -15,7 +15,6 @@ use Laravel\Passport\Token;
 class UserController extends Controller
 {
     use ResponseTrait;
-    #[Addmembers]
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

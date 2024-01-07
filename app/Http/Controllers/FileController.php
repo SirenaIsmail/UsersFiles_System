@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Aspects\Logger;
 use App\Models\File;
+use App\Models\Group;
+use App\Models\User;
+use App\Models\UserGroup;
 use App\Repositories\file\IFileRepository;
 use App\Repositories\group\IGroupRepository;
 use App\Traits\FileCheckTrait;
@@ -15,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Facades\Response;
 
+
 class FileController extends Controller
 {
     use ResponseTrait;
@@ -26,7 +31,7 @@ class FileController extends Controller
         $this->FileRepository = $fileRepository;
     }
 
-
+    #[Logger]
     public function upload(Request $request): JsonResponse
     {
         $user = auth()->user();
@@ -39,17 +44,50 @@ class FileController extends Controller
         }
         $file = $request->file('file');
         $fileName = $file->getClientOriginalName();
+        if (\Illuminate\Support\Facades\File::exists(public_path('Files/').$fileName)) {
+            return $this->returnError("E01","sory! there are a file with the same name");
+        }
         $file->move(public_path('Files'), $fileName);
-        File::create([
+        $fl = File::create([
             'name' => $fileName,
             'path' => public_path('Files'),
             'user_id' => $user->id,
             'group_id' => $request->group
         ]);
-        return $this->returnSuccess("D00", "file uploaded successfully..");
+        return $this->returnData("file",$fl, "file uploaded successfully..","D00");
     }
 
+    #[Logger]
+    public function update(Request $request): JsonResponse
+    {
+        $user = auth()->user();
+        $validator = Validator::make($request->all(), [
+            'id' => 'required',
+            'file' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return $this->returnError("V00", $validator->errors());
+        }
+        $oldfile = File::find($request->id);
+        if (!$oldfile){
+            return $this->returnError("D01","Sorry ! The File Is Not Exist.. ");
+        }
+        if ($oldfile->forID!=$user->id){
+            return $this->returnError("P01","You Do Not Have Permission..");
+        }
+        $file = $request->file('file');
+        $fileName = $oldfile->name;
+        $file->move(public_path('Files'), $fileName);
+        $oldfile->update([
+            'name' => $fileName,
+            'path' => public_path('Files'),
+            'user_id' => $user->id,
+            'group_id' => $request->group
+        ]);
+        return $this->returnData("file",$oldfile, "file Updated successfully..","D00");
+    }
 
+    #[Logger]
     public function download(Request $request){
         $user=auth()->user();
         $validator = Validator::make($request->all(), [
@@ -109,6 +147,7 @@ class FileController extends Controller
         return $this->returnData('files',$filterResult,"","");
     }
 
+    #[Logger]
     public function bulkCheckIn(Request $request){
         $user = auth()->user();
         $ids = $request->input('ids', []);
@@ -118,7 +157,7 @@ class FileController extends Controller
         if (!$this->check($ids)) {
             return response()->json([
                 "message" => "one or more files are locked.",
-            ]);
+            ],status: 404);
         }
             DB::table('files')->whereIn('id',$ids)->lockForUpdate()
                 ->update(['status' => 1,'forID' => $user->id]);
@@ -130,10 +169,13 @@ class FileController extends Controller
 
     }
 
-
+    #[Logger]
     public function checkOut(Request $request){
         $user= auth()->user();
         $file = File::find($request->id);
+        if (!$file){
+            return $this->returnError("P01","file not found..");
+        }
         if ($user->id!=$file->forID){
             return $this->returnError("P01","you do not have permission");
         }
@@ -147,7 +189,51 @@ class FileController extends Controller
         } else {
             return response()->json([
                 "message" => "check out failed.",
-            ]);
+            ],status: 404);
         }
+    }
+
+    public function file_history(Request $request): JsonResponse{
+        $user = auth()->user();
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:files,id'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError("V01", $validator->errors());
+        }
+        $file = File::find($request->id);
+        $grope = Group::find($file->group_id);
+        if ($grope->user_id!=$user->id){
+            return $this->returnError("P01","You Do Not Have Permission..");
+        }
+        $his = $this->FileRepository->file_his($request);
+        return $this->returnData('history',$his,'',"D00");
+    }
+
+
+    public function user_history(Request $request): JsonResponse{
+        $user = auth()->user();
+        $validator = Validator::make($request->all(), [
+            'id' => 'required|exists:users,id'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->returnError("V01", $validator->errors());
+        }
+        $usr = User::find($request->id);
+        $user_groups = UserGroup::with('groups')->where('user_id',$usr->id)->get();
+        $i=0;
+        foreach ($user_groups as $group){
+            if ($group->groups->user_id==$user->id){
+                $i++;
+            }
+        }
+        if ($i==0){
+            return $this->returnError("P01","You Do Not Have Permission..");
+        }
+
+        $his = $this->FileRepository->user_his($request);
+        return $this->returnData('history',$his,'',"D00");
     }
 }

@@ -4,6 +4,7 @@ namespace App\Repositories\file;
 
 
 use App\Models\File;
+use App\Models\FileHistory;
 use App\Models\Group;
 use App\Models\User;
 use App\Models\UserGroup;
@@ -87,7 +88,19 @@ class FileRepository implements IFileRepository
         }
     }
 
+    public function file_his(Request $request)
+    {
+        $file_his = FileHistory::where('file_id',$request->id)
+            ->orderByDesc('id')->get();
+        return $file_his;
+    }
 
+    public function user_his(Request $request)
+    {
+        $file_his = FileHistory::where('user_id',$request->id)
+            ->orderByDesc('id')->get();
+        return $file_his;
+    }
 
 
 }

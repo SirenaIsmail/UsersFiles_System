@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('files_history', function (Blueprint $table) {
             $table->id();
             $table->string('file_name');
+            $table->string('user_name');
             $table->integer('action')->comment('0=>upload,1=>checkin,2=>download,3=>checkout,4=>update');
             $table->foreignId('user_id')
                 ->constrained('users')

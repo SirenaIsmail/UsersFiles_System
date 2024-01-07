@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "157d0183d0083a75e6ed2f6567a0f640",
+    "content-hash": "27899bee48cefc251fc9c8a4f457aa0d",
     "packages": [
         {
             "name": "ahmadvoid/simple-aop",
@@ -9342,13 +9342,12 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "ahmadvoid/simple-aop": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.0"
+        "php": "^8.0",
+        "ext-iconv": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.3.0"

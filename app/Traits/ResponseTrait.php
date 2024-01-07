@@ -13,7 +13,7 @@ trait ResponseTrait
             'success' => false,
             'error' => $errNum,
             'msg' => $msg
-        ]);
+        ],status: 404);
     }
 
     public function returnSuccess($errNum = "", $msg = "")
