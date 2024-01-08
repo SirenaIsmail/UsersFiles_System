@@ -34,7 +34,8 @@ Route::middleware(['auth:api','logRequest'])->group(function () {
     Route::post('delete-group', [GroupController::class, 'deleteGroup']);
     Route::get('logout', [UserController::class, 'logout']);
 
-    ######################################################################################
+    ############################# files Apis ############################################
+    Route::get('files', [FileController::class, 'files']);
     Route::post('upload', [FileController::class, 'upload']);//->middleware('upload');
     Route::post('update', [FileController::class, 'update']);
     Route::post('download', [FileController::class, 'download']);

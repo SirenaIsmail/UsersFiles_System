@@ -33,6 +33,16 @@ class FileController extends Controller
         $this->FileRepository = $fileRepository;
     }
 
+
+    public function files():JsonResponse{
+        $user = auth()->user();
+        if ($user->role != 1){
+            return $this->returnError("P01","You Do not have permission");
+        }
+        $files = File::with('group')->orderByDesc('id')->get();
+        return $this->returnData('files',$files,"","");
+    }
+
     #[Logger]
     #[Transaction]
     public function upload(Request $request): JsonResponse
